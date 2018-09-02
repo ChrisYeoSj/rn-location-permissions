@@ -1,6 +1,14 @@
 import React, {Component} from 'react';
 import { StyleSheet, Text, View, TouchableHighlight, NativeModules } from 'react-native';
 
+const LOCATION_REQUEST = {
+    NOT_DETERMINED: 'NotDetermined',
+    RESTRICTED: 'Restricted',
+    AUTHORIZED_ALWAYS: 'AuthorizedAlways',
+    AUTHORIZED_WHEN_IN_USE: 'AuthorizedWhenInUse',
+    DENIED: 'Denied',
+};
+
 export default class App extends Component {
 
   constructor(props){
@@ -12,9 +20,16 @@ export default class App extends Component {
   }
 
   async _onPressButton(){
-      const {LocationRequestHandler} = NativeModules;
-      LocationRequestHandler.requestLocationPermission();
+      const { LocationRequestHandler } = NativeModules;
+      const currentStatus = await LocationRequestHandler.getLocationStatus();
+      if (currentStatus === LOCATION_REQUEST.NOT_DETERMINED) {
+        console.log('requesting');
+            const status = await LocationRequestHandler.requestLocationPermission();
+            onsole.log('return status,', status);
+      };
       const authorisationStatus = await LocationRequestHandler.getLocationStatus();
+      console.log(typeof authorisationStatus);
+      console.log('authorisationStatus:', authorisationStatus);
       this.setState({authorisationStatus})
   }
 
@@ -28,7 +43,7 @@ export default class App extends Component {
     return (
       <View style={styles.container}>
         <TouchableHighlight onPress={this._onPressButton}>
-          <Text>Request Permission</Text>
+          <Text style={{color: 'blue'}}>Request Permission</Text>
         </TouchableHighlight>
         {authorisationStatus}
       </View>
