@@ -8,23 +8,30 @@ RCT_EXPORT_MODULE(LocationRequestHandler);
 RCT_REMAP_METHOD(requestLocationPermission,  request_location_resolver:(RCTPromiseResolveBlock)resolve
                  request_location_rejecter:(RCTPromiseRejectBlock)reject)
 {
+  dispatch_async(dispatch_get_main_queue(),^ {
   if (!_clLocationManager){
     _clLocationManager = [[CLLocationManager alloc] init];
+    _clLocationManager.delegate = self;
   }
    [_clLocationManager requestWhenInUseAuthorization];
-  _completionHandler = resolve;
+  self.completionHandler = resolve;
+  });
 }
 
 RCT_REMAP_METHOD(getLocationStatus,
                  get_status_resolver:(RCTPromiseResolveBlock)resolve
                  get_status_rejecter:(RCTPromiseRejectBlock)reject)
 {
-  if (!_clLocationManager){
-    _clLocationManager = [[CLLocationManager alloc] init];
-  }
-  NSString *status = [self getLocAuthorizationStatus];
+  dispatch_async(dispatch_get_main_queue(),^ {
+    if (!_clLocationManager){
+      _clLocationManager = [[CLLocationManager alloc] init];
+      _clLocationManager.delegate = self;
+    }
+    NSString *status = [self getLocAuthorizationStatus];
+    
+    resolve(status);
+  });
   
-  resolve(status);
 }
 
 - (NSString *)getLocAuthorizationStatus {
@@ -54,30 +61,35 @@ RCT_REMAP_METHOD(getLocationStatus,
 
 -(void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
-  if (status != kCLAuthorizationStatusNotDetermined)
-  {
-    NSString * currentStatus;
-    switch (status)
-    {
-      case kCLAuthorizationStatusNotDetermined:
-        currentStatus = LocationUndetermined;
-        break;
-      case kCLAuthorizationStatusRestricted:
-        currentStatus = LocationRestricted;
-        break;
-      case kCLAuthorizationStatusDenied:
-        currentStatus = LocationDenied;
-        break;
-      case kCLAuthorizationStatusAuthorizedAlways:
-        currentStatus = LocationAuthorizedAlways;
-        break;
-      case kCLAuthorizationStatusAuthorizedWhenInUse:
-        currentStatus = LocationAuthorizedWhenInUse;
-        break;
-      default: currentStatus=@"Unknown";
-    }
-    self.completionHandler(currentStatus);
-  }
+  dispatch_async(dispatch_get_main_queue(),^ {
+      if (status != kCLAuthorizationStatusNotDetermined)
+      {
+        NSString * currentStatus;
+        switch (status)
+        {
+          case kCLAuthorizationStatusNotDetermined:
+            currentStatus = LocationUndetermined;
+            break;
+          case kCLAuthorizationStatusRestricted:
+            currentStatus = LocationRestricted;
+            break;
+          case kCLAuthorizationStatusDenied:
+            currentStatus = LocationDenied;
+            break;
+          case kCLAuthorizationStatusAuthorizedAlways:
+            currentStatus = LocationAuthorizedAlways;
+            break;
+          case kCLAuthorizationStatusAuthorizedWhenInUse:
+            currentStatus = LocationAuthorizedWhenInUse;
+            break;
+          default: currentStatus=@"Unknown";
+        }
+        if (self.completionHandler != nil)
+        {
+          self.completionHandler(currentStatus);
+        }
+      }
+  });
 }
 
 
