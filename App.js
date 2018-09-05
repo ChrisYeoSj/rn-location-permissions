@@ -23,9 +23,9 @@ export default class App extends Component {
       const { LocationRequestHandler } = NativeModules;
       const currentStatus = await LocationRequestHandler.getLocationStatus();
       if (currentStatus === LOCATION_REQUEST.NOT_DETERMINED) {
-        console.log('requesting');
+            console.log('requesting');
             const status = await LocationRequestHandler.requestLocationPermission();
-            onsole.log('return status,', status);
+            console.log('return status,', status);
       };
       const authorisationStatus = await LocationRequestHandler.getLocationStatus();
       console.log(typeof authorisationStatus);
